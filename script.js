@@ -171,6 +171,11 @@ function displayAllShows(showList){
 
     rootElem.appendChild(showCard);
   });
+
+  const totalShowsCount = allShows.length; // Total available shows
+  const resultCount = document.getElementById("search-result-count");
+
+  resultCount.textContent = `Displaying ${showList.length} show(s) out of ${totalShowsCount} total shows`;
 }
 
 
