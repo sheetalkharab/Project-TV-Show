@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // When a user types in the search bar
   searchInput.addEventListener("input", () => {
-    filterEpisodes(searchInput.value);
+    filterShowsAndEpisodes(searchInput.value);
   });
 });
 
@@ -129,7 +129,7 @@ function makePageForEpisodes(episodeList) {
 
   // Update search result count
   const resultCount = document.getElementById("search-result-count");
-  resultCount.textContent = `Displaying ${episodeList.length} episode(s)`;
+  resultCount.textContent = `Displaying ${episodeList.length} episode(s)  out of ${totalCount} total episodes`;
 }
 
 // Populate episode dropdown
@@ -179,7 +179,7 @@ function displayAllShows(showList){
 }
 
 
-function filterEpisodes(searchTerm) {
+function filterShowsAndEpisodes(searchTerm) {
   searchTerm = searchTerm.toLowerCase().trim();
 
   if(allEpisodes.length > 0){
@@ -191,7 +191,7 @@ function filterEpisodes(searchTerm) {
 
   makePageForEpisodes(filteredEpisodes);
 } else {
-  // Otherwise, search in the shows
+  // search in the shows
   const filteredShows = allShows.filter(show =>
     show.name.toLowerCase().includes(searchTerm) ||
     show.genres.some(genre => genre.toLowerCase().includes(searchTerm)) ||
