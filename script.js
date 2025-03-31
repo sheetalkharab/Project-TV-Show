@@ -1,12 +1,14 @@
 let allEpisodes = []; // Store episodes globally
+let allShows = [];
 
 document.addEventListener("DOMContentLoaded", async () => {
   const showSelector = document.getElementById("show-selector");
   const episodeSelector = document.getElementById("episode-selector");
   const searchInput = document.getElementById("search-input");
 
-  let allShows = await fetchShows();
+  allShows = await fetchShows();
   populateShowSelector(allShows);
+  displayAllShows(allShows);
 
   // When a user selects a show
   showSelector.addEventListener("change", async () => {
@@ -14,6 +16,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (selectedShowId !== "") {
       allEpisodes = await fetchEpisodes(selectedShowId);
       setup(allEpisodes);
+    } else {
+      displayAllShows(allShows);
     }
   });
 
@@ -38,9 +42,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 // Fetch all shows
 async function fetchShows() {
-  const apiUrl = "https://api.tvmaze.com/shows";
+  const showsApiUrl = "https://api.tvmaze.com/shows";
   try {
-    let response = await fetch(apiUrl);
+    let response = await fetch(showsApiUrl);
     if (!response.ok) throw new Error("Failed to load shows");
     let shows = await response.json();
     return shows.sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically
@@ -52,11 +56,24 @@ async function fetchShows() {
 
 // Fetch episodes for a selected show
 async function fetchEpisodes(showId) {
-  const apiUrl = `https://api.tvmaze.com/shows/${showId}/episodes`;
+  const episodesApiUrl = `https://api.tvmaze.com/shows/${showId}/episodes`;
+  const showDetailsApiUrl =  `https://api.tvmaze.com/shows/${showId}`;
   try {
-    let response = await fetch(apiUrl);
-    if (!response.ok) throw new Error("Failed to load episodes");
-    return await response.json();
+    const [episodesResponse, showResponse] = await Promise.all([
+    fetch(episodesApiUrl),
+    fetch(showDetailsApiUrl)
+  ]); 
+    if (!episodesResponse.ok || !showResponse.ok) throw new Error("Failed to load content");
+    const episodes= await episodesResponse.json();
+    const showDetails= await showResponse.json();
+
+    // Attach show details to each episode (so we can access them later)
+  episodes.forEach(ep => {
+    ep.showGenres = showDetails.genres || [];
+    ep.showStatus = showDetails.status || "Unknown";
+  });
+
+    return episodes;
   } catch (error) {
     console.error(error);
     return [];
@@ -133,14 +150,51 @@ function updateEpisodeSelector(episodes) {
   });
 }
 
-// Search episodes
+function displayAllShows(showList){
+  const rootElem = document.getElementById("root");
+  rootElem.innerHTML = '';// to clear previous content
+  const template = document.getElementById("show-card-template");
+  const searchTerm = document.getElementById("search-input").value.toLowerCase().trim();
+
+  showList.forEach(show => {
+    const showCard = template.content.cloneNode(true);
+
+    
+    showCard.querySelector(".show-name").innerHTML = highlightText(show.name, searchTerm);
+    showCard.querySelector(".show-image").src = show.image?.medium || 'placeholder.jpg';
+    showCard.querySelector(".show-image").alt = show.name;
+    showCard.querySelector(".show-genres").innerHTML = highlightText(show.genres.join(", ")|| "N/A", searchTerm);
+    showCard.querySelector(".show-status").textContent = show.status || "Unknown";
+    showCard.querySelector(".show-rating").textContent = show.rating?.average || "Not Rated";
+    showCard.querySelector(".show-runtime").textContent = show.runtime ? `${show.runtime} min` : "Unknown";
+    showCard.querySelector(".show-summary").innerHTML = highlightText(show.summary || "No summary available.", searchTerm);
+
+    rootElem.appendChild(showCard);
+  });
+}
+
+
 function filterEpisodes(searchTerm) {
   searchTerm = searchTerm.toLowerCase().trim();
 
+  if(allEpisodes.length > 0){
   const filteredEpisodes = allEpisodes.filter(episode =>
     episode.name.toLowerCase().includes(searchTerm) ||
-    episode.summary.toLowerCase().includes(searchTerm)
+    episode.summary.toLowerCase().includes(searchTerm)||
+    episode.showGenres.some(genre => genre.toLowerCase().includes(searchTerm))
   );
 
   makePageForEpisodes(filteredEpisodes);
+} else {
+  // Otherwise, search in the shows
+  const filteredShows = allShows.filter(show =>
+    show.name.toLowerCase().includes(searchTerm) ||
+    show.genres.some(genre => genre.toLowerCase().includes(searchTerm)) ||
+    (show.summary && show.summary.toLowerCase().includes(searchTerm))
+  );
+  displayAllShows(filteredShows);
+
 }
+
+}
+
