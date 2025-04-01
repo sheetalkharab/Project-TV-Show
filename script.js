@@ -1,6 +1,9 @@
 let allEpisodes = []; // Store episodes globally
 let allShows = [];
 
+let selectedShowId = "";
+let selectedEpisodeId = "";
+
 document.addEventListener("DOMContentLoaded", async () => {
   const showSelector = document.getElementById("show-selector");
   const episodeSelector = document.getElementById("episode-selector");
@@ -8,22 +11,22 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   allShows = await fetchShows();
   populateShowSelector(allShows);
-  displayAllShows(allShows);
+  displayAllShowsList(allShows);
 
   // When a user selects a show
   showSelector.addEventListener("change", async () => {
-    const selectedShowId = showSelector.value;
+    selectedShowId = showSelector.value;
     if (selectedShowId !== "") {
       allEpisodes = await fetchEpisodes(selectedShowId);
       setup(allEpisodes);
     } else {
-      displayAllShows(allShows);
+      displayAllShowsList(allShows);
     }
   });
 
   // When a user selects an episode
   episodeSelector.addEventListener("change", function () {
-    const selectedEpisodeId = this.value;
+    selectedEpisodeId = this.value;
     if (selectedEpisodeId === "all") {
       makePageForEpisodes(allEpisodes);
     } else {
@@ -34,7 +37,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // When a user types in the search bar
+ // When a user types in the search bar
   searchInput.addEventListener("input", () => {
     filterShowsAndEpisodes(searchInput.value);
   });
@@ -128,6 +131,7 @@ function makePageForEpisodes(episodeList) {
   });
 
   // Update search result count
+  const totalCount = allEpisodes.length;
   const resultCount = document.getElementById("search-result-count");
   resultCount.textContent = `Displaying ${episodeList.length} episode(s)  out of ${totalCount} total episodes`;
 }
@@ -150,7 +154,7 @@ function updateEpisodeSelector(episodes) {
   });
 }
 
-function displayAllShows(showList){
+function displayAllShowsList(showList){
   const rootElem = document.getElementById("root");
   rootElem.innerHTML = '';// to clear previous content
   const template = document.getElementById("show-card-template");
@@ -164,9 +168,9 @@ function displayAllShows(showList){
     showCard.querySelector(".show-image").src = show.image?.medium || 'placeholder.jpg';
     showCard.querySelector(".show-image").alt = show.name;
     showCard.querySelector(".show-genres").innerHTML = highlightText(show.genres.join(", ")|| "N/A", searchTerm);
-    showCard.querySelector(".show-status").textContent = show.status || "Unknown";
-    showCard.querySelector(".show-rating").textContent = show.rating?.average || "Not Rated";
-    showCard.querySelector(".show-runtime").textContent = show.runtime ? `${show.runtime} min` : "Unknown";
+    showCard.querySelector(".show-status").innerHTML = highlightText(show.status || "Unknown", searchTerm);
+    showCard.querySelector(".show-rating").innerHTML = highlightText(show.rating?.average ? show.rating.average.toString() :"Not Rated", searchTerm);
+    showCard.querySelector(".show-runtime").innerHTML = highlightText(show.runtime ? `${show.runtime} min` : "Unknown", searchTerm);
     showCard.querySelector(".show-summary").innerHTML = highlightText(show.summary || "No summary available.", searchTerm);
 
     rootElem.appendChild(showCard);
@@ -181,13 +185,30 @@ function displayAllShows(showList){
 
 function filterShowsAndEpisodes(searchTerm) {
   searchTerm = searchTerm.toLowerCase().trim();
+//if search is empty, restore default view
+  if(searchTerm === ""){
+    if(!selectedShowId){
+      displayAllShowsList(allShows);// show allShows when now show is selected
+    }else if(selectedEpisodeId === "all"){
+      makePageForEpisodes(episodeList);// show all episodes of selected show
+    }else if(selectedEpisodeId){
+      const selectedEpisode = episodeList.find(episode=> episode.id == selectedEpisodeId);
+      if(selectedEpisode){
+        makePageForEpisodes([selectedEpisode]);// show only selected episode
+      }
+    }
+    return;
+  }
+// if a show is selected, filter episodes inside that
+  if(selectedShowId){
+  const filteredEpisodes = allEpisodes.filter(episode =>{
 
-  if(allEpisodes.length > 0){
-  const filteredEpisodes = allEpisodes.filter(episode =>
-    episode.name.toLowerCase().includes(searchTerm) ||
-    episode.summary.toLowerCase().includes(searchTerm)||
-    episode.showGenres.some(genre => genre.toLowerCase().includes(searchTerm))
-  );
+    const episodeIdentifier = `S${String(episode.season).padStart(2, '0')}E${String(episode.number).padStart(2, '0')}`;
+    return episode.name.toLowerCase().includes(searchTerm) ||
+    episode.summary&& episode.summary.toLowerCase().includes(searchTerm)||
+    episodeIdentifier.toLowerCase().includes(searchTerm)
+    
+  });
 
   makePageForEpisodes(filteredEpisodes);
 } else {
@@ -195,11 +216,21 @@ function filterShowsAndEpisodes(searchTerm) {
   const filteredShows = allShows.filter(show =>
     show.name.toLowerCase().includes(searchTerm) ||
     show.genres.some(genre => genre.toLowerCase().includes(searchTerm)) ||
-    (show.summary && show.summary.toLowerCase().includes(searchTerm))
+    (show.summary && show.summary.toLowerCase().includes(searchTerm)) ||
+    (show.runtime!== null && show.runtime !== undefined && show.runtime.toString().includes(searchTerm))||
+    (typeof show.status === "string" && show.status.toLowerCase().includes(searchTerm)) || 
+    (show.rating && show.rating.average !== null && show.rating.average !== undefined && show.rating.average.toString().includes(searchTerm)) 
+    
   );
-  displayAllShows(filteredShows);
+  displayAllShowsList(filteredShows);
 
 }
-
 }
+
+
+
+
+
+
+
 
