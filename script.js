@@ -16,15 +16,36 @@ document.addEventListener("DOMContentLoaded", async () => {
   // When a user selects a show
   showSelector.addEventListener("change", async () => {
     selectedShowId = showSelector.value;
+
+    const episodeSelector = document.getElementById("episode-selector");
+    episodeSelector.innerHTML = '';//clear previous episode options
+
+    //to add default "show all episodes" option
+    const showAllOption = document.createElement("option");
+    showAllOption.value = "all";
+    showAllOption.textContent = "Show All Episodes";
+    episodeSelector.appendChild(showAllOption);
+
     if (selectedShowId !== "") {
       allEpisodes = await fetchEpisodes(selectedShowId);
       setup(allEpisodes);
+
+      // If there was a previously selected episode, make sure it's in the dropdown
+      if (selectedEpisodeId) {
+        const episodeOption = document.createElement("option");
+        const selectedEpisode = allEpisodes.find(ep => ep.id === selectedEpisodeId);
+        if (selectedEpisode) {
+          episodeOption.value = selectedEpisode.id;
+          episodeOption.textContent = `S${String(selectedEpisode.season).padStart(2, "0")}E${String(selectedEpisode.number).padStart(2, "0")} - ${selectedEpisode.name}`;
+          episodeSelector.appendChild(episodeOption);
+        }
+      }
     } else {
-      displayAllShowsList(allShows);
+      displayAllShowsList(allShows);// show allShows list when no show is selected
     }
   });
 
-  // When a user selects an episode
+// When a user selects an episode
   episodeSelector.addEventListener("change", function () {
     selectedEpisodeId = this.value;
     if (selectedEpisodeId === "all") {
