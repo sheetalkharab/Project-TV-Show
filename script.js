@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   showSelector.addEventListener("change", async () => {
     selectedShowId = showSelector.value;
 
-    const episodeSelector = document.getElementById("episode-selector");
+    // const episodeSelector = document.getElementById("episode-selector");
     episodeSelector.innerHTML = '';//clear previous episode options
 
     //to add default "show all episodes" option
@@ -216,6 +216,9 @@ function filterShowsAndEpisodes(searchTerm) {
       if(selectedEpisode){
         makePageForEpisodes([selectedEpisode]);// show only selected episode
       }
+    }else {
+      // If no specific episode or search is clear, show all episodes
+      makePageForEpisodes(allEpisodes);
     }
     return;
   }
@@ -252,11 +255,6 @@ function showErrorMessage(message){
   errorContainer.textContent = message;
   errorContainer.style.display = "block";
 }
-
-
-
-
-
 
 
 
