@@ -1,4 +1,45 @@
 #root {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+  gap: 20px; 
+  padding: 20px;
+  
+  
+}
+
+.show-card:hover {
+  transform: scale(1.05);
+}
+
+
+.episode-card {
+  border: 2px solid #ccc;
+  border-radius: 10px;
+  padding: 15px;
+  text-align: center;
+  background-color: #f9f9f9;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  
+}
+
+.episode-card:hover {
+  transform: scale(1.05);
+}
+
+.episode-card img {
+  max-width: 100%;
+  border-radius: 5px;
+}
+
+.episode-name {
+  font-size: 18px;
+  font-weight: bold;
+  color: black;
+  margin-top: 10px;
+}
+
+[data-summary] {
+  font-size: 14px;
   color: red;
 }
 
