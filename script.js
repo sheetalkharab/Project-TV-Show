@@ -5,6 +5,7 @@ let selectedShowId = "";
 let selectedEpisodeId = "";
 
 document.addEventListener("DOMContentLoaded", async () => {
+   
   const showSelector = document.getElementById("show-selector");
   const episodeSelector = document.getElementById("episode-selector");
   const searchInput = document.getElementById("search-input");
@@ -73,8 +74,7 @@ async function fetchShows() {
     let shows = await response.json();
     return shows.sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically
   } catch (error) {
-    console.error(error);
-    return [];
+    showErrorMessage("failed to load shows. Please try again!");
   }
 }
 
@@ -99,8 +99,7 @@ async function fetchEpisodes(showId) {
 
     return episodes;
   } catch (error) {
-    console.error(error);
-    return [];
+    showErrorMessage("Failed to load episodes. Please try again!");
   }
 }
 
@@ -246,6 +245,12 @@ function filterShowsAndEpisodes(searchTerm) {
   displayAllShowsList(filteredShows);
 
 }
+}
+
+function showErrorMessage(message){
+  const errorContainer = document.getElementById("error-message-container");
+  errorContainer.textContent = message;
+  errorContainer.style.display = "block";
 }
 
 
