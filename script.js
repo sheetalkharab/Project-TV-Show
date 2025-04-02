@@ -3,6 +3,7 @@ let allShows = [];
 
 let selectedShowId = "";
 let selectedEpisodeId = "";
+const episodeCache = {};//cache for fetched episodes
 
 document.addEventListener("DOMContentLoaded", async () => {
    
@@ -80,6 +81,9 @@ async function fetchShows() {
 
 // Fetch episodes for a selected show
 async function fetchEpisodes(showId) {
+  if (episodeCache[showId]) {
+    return episodeCache[showId]; // Return cached episodes
+  }
   const episodesApiUrl = `https://api.tvmaze.com/shows/${showId}/episodes`;
   const showDetailsApiUrl =  `https://api.tvmaze.com/shows/${showId}`;
   try {
@@ -96,10 +100,11 @@ async function fetchEpisodes(showId) {
     ep.showGenres = showDetails.genres || [];
     ep.showStatus = showDetails.status || "Unknown";
   });
-
+  episodeCache[showId] = episodes; // Cache the fetched episodes
     return episodes;
   } catch (error) {
     showErrorMessage("Failed to load episodes. Please try again!");
+    return [];
   }
 }
 
@@ -210,9 +215,9 @@ function filterShowsAndEpisodes(searchTerm) {
     if(!selectedShowId){
       displayAllShowsList(allShows);// show allShows when now show is selected
     }else if(selectedEpisodeId === "all"){
-      makePageForEpisodes(episodeList);// show all episodes of selected show
+      makePageForEpisodes(allEpisodes);// show all episodes of selected show
     }else if(selectedEpisodeId){
-      const selectedEpisode = episodeList.find(episode=> episode.id == selectedEpisodeId);
+      const selectedEpisode = allEpisodes.find(episode=> episode.id == selectedEpisodeId);
       if(selectedEpisode){
         makePageForEpisodes([selectedEpisode]);// show only selected episode
       }
