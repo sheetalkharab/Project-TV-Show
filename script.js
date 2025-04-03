@@ -152,6 +152,14 @@ function makePageForEpisodes(episodeList) {
     episodeCard.querySelector("img").src = episode.image ? episode.image.medium : 'placeholder.jpg';
     episodeCard.querySelector("[data-summary]").innerHTML = highlightText(episode.summary || "No summary available.", searchTerm);
 
+
+    //Make the episode card clickable
+    episodeCard.querySelector(".episode-card").addEventListener("click", () => {
+      document.getElementById("episode-selector").value = episode.id; // Update dropdown
+      selectedEpisodeId = episode.id;
+      makePageForEpisodes([episode]); // Show only this episode
+    });
+
     rootElem.appendChild(episodeCard);
   });
 
@@ -197,6 +205,17 @@ function displayAllShowsList(showList){
     showCard.querySelector(".show-rating").innerHTML = highlightText(show.rating?.average ? show.rating.average.toString() :"Not Rated", searchTerm);
     showCard.querySelector(".show-runtime").innerHTML = highlightText(show.runtime ? `${show.runtime} min` : "Unknown", searchTerm);
     showCard.querySelector(".show-summary").innerHTML = highlightText(show.summary || "No summary available.", searchTerm);
+
+
+    //make shows card clickable so can select fom here
+    showCard.querySelector(".show-card").addEventListener("click", () => {
+      document.getElementById("show-selector").value = show.id; // Update dropdown
+      selectedShowId = show.id;
+      fetchEpisodes(show.id).then(episodes => {
+        allEpisodes = episodes;
+        setup(episodes);
+      });
+    });
 
     rootElem.appendChild(showCard);
   });
